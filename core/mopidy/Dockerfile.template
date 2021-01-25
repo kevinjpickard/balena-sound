@@ -1,0 +1,38 @@
+FROM balenalib/%%BALENA_MACHINE_NAME%%-debian-node:10-buster
+
+RUN apt-get update \
+  && apt-get install -y wget \
+                        gnupg2 \
+  && wget -q -O - https://apt.mopidy.com/mopidy.gpg | apt-key add - \
+  && wget -q -O /etc/apt/sources.list.d/mopidy.list https://apt.mopidy.com/buster.list \
+  && apt-get update \
+  && apt-get install mopidy \
+  && rm -rf /var/lib/apt/lists/*
+
+# Build PySpotify since we're on ARM
+# RUN pip3 install pyspotify
+
+# Add git to get some Mopidy stuff straight from Github
+#RUN apt-get update \
+# && apt-get install -y git \
+# && rm -rf /var/lib/apt/lists/*
+
+# COPY requirements.txt requirements.txt
+
+# RUN pip3 install -r requirements.txt \
+#   && rm -rf ~/.cache/pip
+
+# RUN update-ca-certificates --fresh
+
+COPY mopidy.conf /root/.config/mopidy/
+
+VOLUME ["/root/.cache/mopidy", "/root/.local/share/mopidy"]
+
+EXPOSE 6600 6680
+
+# Copy our systemd entrypoint script and ensure it's used
+COPY entry.sh /usr/bin
+STOPSIGNAL 37
+# ENTRYPOINT ["/usr/bin/entry.sh"]
+
+ENTRYPOINT ["mopidy"]
